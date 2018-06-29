@@ -7,10 +7,16 @@ function ENT:Initialize()
 	self:PhysicsInit( SOLID_VPHYSICS )
 	self:SetMoveType( MOVETYPE_VPHYSICS )
 	self:SetSolid( SOLID_VPHYSICS )
-	self:SetUseType( SIMPLE_USE )
+	self:SetUseType( ONOFF_USE )
 	self:SetNWBool( "isLoot", true )
 	self:SetNWInt( "timeToLoot", self.timeToLoot )
 	self:SetNWInt( "nextSearch", 0 )
+	self.UsingPlayer = nil
+	self.UseStart = nil	
+	self.BeingUsed = false
+	self.FirstTick = false
+	self.NextSearch = 0
+	self.LootProgress = 0
 	local phys = self:GetPhysicsObject()
 	if (phys:IsValid()) then
 		phys:Wake()
@@ -19,6 +25,7 @@ end
 
 function ENT:Loot( ply )
     self:SetNWInt( "nextSearch", CurTime() + self.cooldownTime )
+	self.NextSearch = CurTime() + self.cooldownTime
 	local chc, minChc, maxChc = 0
 	local lootChc = {}
 	local lootClass = ""
@@ -42,19 +49,63 @@ function ENT:Loot( ply )
 	end
 end
 
-function ENT:Use( activator, caller )
-    return
+function ENT:Use( activator, caller, usetype )
+    	if usetype == USE_ON and not self.BeingUsed and self.NextSearch < CurTime() then
+		self:StartUse(caller)
+	elseif usetype == USE_OFF and self.BeingUsed then
+		self:CancelUse()
+	end
+end
+
+function ENT:StartUse(ply)
+	self.UsingPlayer = ply
+	self.UseStart = CurTime()
+	self.BeingUsed = true
+	self.FirstTick = true
+end
+
+function ENT:CancelUse()
+	self:SendProgressUpdate(self.UsingPlayer, 0)
+	self:EnableProgressBar(self.UsingPlayer, false)
+	self.UsingPlayer = nil
+	self.UseStart = nil	
+	self.BeingUsed = false
+	self.FirstTick = false
+	
+end
+
+function ENT:SendProgressUpdate(ply, progress)
+	net.Start("Loot_SetDrawProgress")
+		net.WriteUInt(progress, 7)
+	net.Send(ply)
+end
+
+function ENT:EnableProgressBar(ply, enabled)
+	net.Start("Loot_EnableProgress")
+		net.WriteBool(enabled)
+	net.Send(ply)
 end
  
 function ENT:Think()
+
+	if self.BeingUsed then
+		if not IsValid(self.UsingPlayer) or !self.UsingPlayer:KeyDown(IN_USE) or self.NextSearch > CurTime() then self:CancelUse() return end
+
+	
+		if self.FirstTick then self:EnableProgressBar(self.UsingPlayer, true) self.FirstTick = false end
+		
+		self.LootProgress = ((CurTime() - self.UseStart) / self.timeToLoot) * 100
+
+		if self.LootProgress >= 100 then 
+			self:Loot(self.UsingPlayer) 
+			self:EnableProgressBar(self.UsingPlayer, false) 
+			self:CancelUse() 
+			self.NextSearch = CurTime()
+			return 
+		end
+		
+		self:SendProgressUpdate(self.UsingPlayer, self.LootProgress)
+	end
+
 end
-
-
-
-
-
-
-
-
-
 
