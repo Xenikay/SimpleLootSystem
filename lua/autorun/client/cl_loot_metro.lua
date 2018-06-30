@@ -25,10 +25,11 @@ net.Receive("Loot_EnableProgress", function()
 end)
 
 
-local SW, SH, LV = ScrW(), ScrH(), CurTime()
+
 hook.Add( "HUDPaint", "HP_lootSystem", function()
 	local LS = LocalPlayer().lootSystem
 	local ent = LocalPlayer():GetEyeTraceNoCursor().Entity
+	local SW, SH = ScrW(), ScrH()
 
 	if ent:GetNWInt("nextSearch") > CurTime() or not ent:GetNWBool("isLoot")  or LocalPlayer():GetPos():Distance(ent:GetPos()) > 110 then return end
 	
