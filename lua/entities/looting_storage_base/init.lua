@@ -89,7 +89,7 @@ end
 function ENT:Think()
 
 	if self.BeingUsed then
-		if not IsValid(self.UsingPlayer) or !self.UsingPlayer:KeyDown(IN_USE) or self.NextSearch > CurTime() then self:CancelUse() return end
+		if not IsValid(self.UsingPlayer) or !self.UsingPlayer:KeyDown(IN_USE) or self.NextSearch > CurTime() or self.UsingPlayer:GetEyeTraceNoCursor().Entity != self then self:CancelUse() return end
 
 	
 		if self.FirstTick then self:EnableProgressBar(self.UsingPlayer, true) self.FirstTick = false end
