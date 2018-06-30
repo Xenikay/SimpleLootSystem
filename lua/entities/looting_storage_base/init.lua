@@ -14,7 +14,6 @@ function ENT:Initialize()
 	self.UsingPlayer = nil
 	self.UseStart = nil	
 	self.BeingUsed = false
-	self.FirstTick = false
 	self.NextSearch = 0
 	self.LootProgress = 0
 	local phys = self:GetPhysicsObject()
@@ -24,7 +23,7 @@ function ENT:Initialize()
 end
 
 function ENT:Loot( ply )
-    self:SetNWInt( "nextSearch", CurTime() + self.cooldownTime )
+    	self:SetNWInt( "nextSearch", CurTime() + self.cooldownTime )
 	self.NextSearch = CurTime() + self.cooldownTime
 	local chc, minChc, maxChc = 0
 	local lootChc = {}
@@ -58,26 +57,18 @@ function ENT:Use( activator, caller, usetype )
 end
 
 function ENT:StartUse(ply)
+	self:EnableProgressBar(ply, true)
 	self.UsingPlayer = ply
 	self.UseStart = CurTime()
 	self.BeingUsed = true
-	self.FirstTick = true
 end
 
 function ENT:CancelUse()
-	self:SendProgressUpdate(self.UsingPlayer, 0)
 	self:EnableProgressBar(self.UsingPlayer, false)
 	self.UsingPlayer = nil
 	self.UseStart = nil	
 	self.BeingUsed = false
-	self.FirstTick = false
 	
-end
-
-function ENT:SendProgressUpdate(ply, progress)
-	net.Start("Loot_SetDrawProgress")
-		net.WriteUInt(progress, 7)
-	net.Send(ply)
 end
 
 function ENT:EnableProgressBar(ply, enabled)
@@ -90,9 +81,6 @@ function ENT:Think()
 
 	if self.BeingUsed then
 		if not IsValid(self.UsingPlayer) or !self.UsingPlayer:KeyDown(IN_USE) or self.NextSearch > CurTime() or self.UsingPlayer:GetEyeTraceNoCursor().Entity != self then self:CancelUse() return end
-
-	
-		if self.FirstTick then self:EnableProgressBar(self.UsingPlayer, true) self.FirstTick = false end
 		
 		self.LootProgress = ((CurTime() - self.UseStart) / self.timeToLoot) * 100
 
@@ -104,7 +92,6 @@ function ENT:Think()
 			return 
 		end
 		
-		self:SendProgressUpdate(self.UsingPlayer, self.LootProgress)
 	end
 
 end
