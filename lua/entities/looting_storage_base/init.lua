@@ -7,6 +7,11 @@ function ENT:Initialize()
 	self:PhysicsInit( SOLID_VPHYSICS )
 	self:SetMoveType( MOVETYPE_VPHYSICS )
 	self:SetSolid( SOLID_VPHYSICS )
+	local phys = self:GetPhysicsObject()
+	if (phys:IsValid()) then
+		phys:Wake()
+	end
+
 	self:SetUseType( ONOFF_USE )
 	self:SetNWBool( "isLoot", true )
 	self:SetNWInt( "timeToLoot", self.timeToLoot )
@@ -16,10 +21,25 @@ function ENT:Initialize()
 	self.BeingUsed = false
 	self.NextSearch = 0
 	self.LootProgress = 0
-	local phys = self:GetPhysicsObject()
-	if (phys:IsValid()) then
-		phys:Wake()
-	end
+
+end
+
+function ENT:SpawnFunction(ply, tr, class)
+
+	if (!tr.Hit) then return end
+
+	local Angs = ply:EyeAngles()
+	Angs.p = 0
+	Angs.y = Angs.y + 180
+
+	local ent = ents.Create(class)
+	ent:SetPos(tr.HitPos + tr.HitNormal * 50)
+	ent:SetAngles(Angs)
+	ent:Spawn()
+	ent:DropToFloor()
+	ent:Activate()
+
+	return ent
 end
 
 function ENT:Loot( ply )
