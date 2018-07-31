@@ -154,7 +154,11 @@ local function createItemAddEditDialog(itemsList, container, class, chance)
     end
 
     local createBtn = vgui.Create('DButton', newItemModal)
-    createBtn:SetText('Create')
+    if edit then
+        createBtn:SetText('Edit')
+    else
+        createBtn:SetText('Create')
+    end
     createBtn:SetPos(10, 100)
     createBtn:SetWidth(380)
     createBtn.DoClick = function()
