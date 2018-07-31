@@ -113,7 +113,6 @@ local function updateItemsList(list, container)
 end
 
 local function createItemAddEditDialog(itemsList, container, class, chance)
-    MsgN(container, class, chance)
     local edit = class ~= nil and chance ~= nil
     local newItemModal = vgui.Create('DFrame')
     newItemModal:SetSize(400, 130)
@@ -270,7 +269,6 @@ hook.Add('PopulateToolMenu', 'Looting chances', function()
         end
         editItemBtn.DoClick = function()
             local container, class, chance = getSelectedItemData()
-            MsgN(container, class, chance)
             if container == nil then return end
             createItemAddEditDialog(itemsList, container, class, chance)
         end
