@@ -48,7 +48,7 @@ function ENT:Loot( ply )
 	local chc, minChc, maxChc = 0
 	local lootChc = {}
 	local lootClass = ""
-	for k, v in pairs ( self.lootList ) do
+	for k, v in pairs ( Looting_chances[self.containerName] ) do
 		lootChc[k] = { min = chc+1, max = chc + v }
 		chc = chc + v
 	end
