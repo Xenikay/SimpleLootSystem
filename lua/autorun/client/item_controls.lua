@@ -68,17 +68,20 @@ local function chancesFileExists()
     return file.Exists(LOOTING_CHANCES_FILE, 'DATA')
 end
 
-local function loadChances()
-    local serialized = file.Read(LOOTING_CHANCES_FILE)
-    return util.JSONToTable(serialized)
-end
-
+-- Sends the chances table to server.
 local function uptadeChancesToServer()
     net.Start('Loot_UpdateChances')
     net.WriteTable(Looting_chances)
     net.SendToServer()
 end
 
+-- Loads chances from file.
+local function loadChances()
+    local serialized = file.Read(LOOTING_CHANCES_FILE)
+    Looting_chances = util.JSONToTable(serialized)
+end
+
+-- Save chances to file.
 local function saveChances(chancesTable)
     local serialized = util.TableToJSON(chancesTable)
     file.Write(LOOTING_CHANCES_FILE, serialized)
@@ -95,13 +98,11 @@ end
 -- Global table with container settings tables.
 -- Each container settings table contains lootable items as keys and chances to loot them in percents as values.
 if chancesFileExists() then
-    Looting_chances = loadChances()
+    loadChances()
 else
     Looting_chances = defaultChances
 end
 uptadeChancesToServer()
-
--- CreateClientConVar('null', '0', false, false, '"No convar" placeholder for functions which need a convar.')
 
 local function updateItemsList(list, container)
     list:Clear()
@@ -112,8 +113,10 @@ local function updateItemsList(list, container)
     end
 end
 
+-- Shows an item add/edit dialog
 local function createItemAddEditDialog(itemsList, container, class, chance)
     local edit = class ~= nil and chance ~= nil
+
     local newItemModal = vgui.Create('DFrame')
     newItemModal:SetSize(400, 130)
     newItemModal:Center()
@@ -130,9 +133,6 @@ local function createItemAddEditDialog(itemsList, container, class, chance)
     itemLabel:SetText('Item class (i. e. item_healthkit)')
     itemLabel:SetPos(10, 30)
     itemLabel:SetWidth(200)
-
-    -- local chanceLabel = vgui.Create('DLabel', newItemModal)
-    -- chanceLabel:SetText()
 
     local itemArea = vgui.Create('DTextEntry', newItemModal)
     itemArea:SetPos(180, 30)
@@ -161,7 +161,6 @@ local function createItemAddEditDialog(itemsList, container, class, chance)
     createBtn:SetPos(10, 100)
     createBtn:SetWidth(380)
     createBtn.DoClick = function()
-        -- local _, container = containerComboBox:GetSelected()
         local class = itemArea:GetText()
         local chance = math.Round(chanceSlider:GetValue(), 2)
         Looting_chances[container][class] = chance
@@ -173,7 +172,7 @@ local function createItemAddEditDialog(itemsList, container, class, chance)
     newItemModal:MakePopup()
 end
 
--- Shows a Yes/No dialog with specified message. Runs yesCallback when Yes is clicked, does nothing when No is clicked.
+-- Shows a Yes/No dialog with specified message. Calls yesCallback when Yes is clicked, does nothing when No is clicked.
 local function yesNoDialog(message, yesCallback)
     local dialog = vgui.Create('DFrame')
     dialog:SetTitle('')
@@ -226,20 +225,13 @@ hook.Add('PopulateToolMenu', 'Looting chances', function()
         itemsList:AddColumn("Item")
         itemsList:AddColumn("Chance, %")
 
-        -- itemsList:AddLine( "PesterChum", "2mb" )
-        -- itemsList:AddLine( "Lumitorch", "512kb" )
-        -- itemsList:AddLine( "Troj-on", "661kb" )
-
-        -- itemsList.OnRowSelected = function(lst, index, pnl)
-	    --     print( "Selected " .. pnl:GetColumnText( 1 ) .. " ( " .. pnl:GetColumnText( 2 ) .. " ) at index " .. index )
-        -- end
-
         function containerComboBox:OnSelect(index, value, data)
             updateItemsList(itemsList, data)
         end
 
         containerComboBox:ChooseOptionID(1)
 
+        -- Returns the current selected container.
         local function getCurrentContainer()
             local _, container = containerComboBox:GetSelected()
             return container
@@ -252,6 +244,7 @@ hook.Add('PopulateToolMenu', 'Looting chances', function()
             createItemAddEditDialog(itemsList, container)
         end
 
+        -- Returns the current container, current selected item's class and chance.
         local function getSelectedItemData()
             local lines = itemsList:GetSelected()
             if #lines == 0 then return end
