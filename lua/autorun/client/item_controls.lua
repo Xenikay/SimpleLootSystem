@@ -260,10 +260,14 @@ hook.Add('PopulateToolMenu', 'Looting chances', function()
         function editItemBtn:IsVisible()
             return #itemsList:GetSelected() == 0
         end
-        editItemBtn.DoClick = function()
+        local function editItem()
             local container, class, chance = getSelectedItemData()
             if container == nil then return end
             createItemAddEditDialog(itemsList, container, class, chance)
+        end
+        editItemBtn.DoClick = editItem()
+        function itemsList:DoDoubleClick(id, line)
+            editItem()
         end
 
         local removeItemBtn = vgui.Create('DButton', panel)
