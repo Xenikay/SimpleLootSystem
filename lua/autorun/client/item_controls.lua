@@ -73,9 +73,16 @@ local function loadChances()
     return util.JSONToTable(serialized)
 end
 
+local function uptadeChancesToServer()
+    net.Start('Loot_UpdateChances')
+    net.WriteTable(Looting_chances)
+    net.SendToServer()
+end
+
 local function saveChances(chancesTable)
     local serialized = util.TableToJSON(chancesTable)
     file.Write(LOOTING_CHANCES_FILE, serialized)
+    uptadeChancesToServer()
 end
 
 -- Transforms "snake_case" to "Snake case"
@@ -92,6 +99,7 @@ if chancesFileExists() then
 else
     Looting_chances = defaultChances
 end
+uptadeChancesToServer()
 
 -- CreateClientConVar('null', '0', false, false, '"No convar" placeholder for functions which need a convar.')
 
