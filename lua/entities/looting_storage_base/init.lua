@@ -43,11 +43,15 @@ function ENT:SpawnFunction(ply, tr, class)
 end
 
 function ENT:Loot( ply )
-    	self:SetNWInt( "nextSearch", CurTime() + self.cooldownTime )
+	self:SetNWInt( "nextSearch", CurTime() + self.cooldownTime )
 	self.NextSearch = CurTime() + self.cooldownTime
+	
+    	if hook.Run("XeLootingSystemDropStart", self, ply) then return end
+	
 	local chc, minChc, maxChc = 0
 	local lootChc = {}
 	local lootClass = ""
+    	local loot
 	for k, v in pairs ( self.lootList ) do
 		lootChc[k] = { min = chc+1, max = chc + v }
 		chc = chc + v
@@ -58,14 +62,20 @@ function ENT:Loot( ply )
 			lootClass = k
 		end
 	end
+	
+    	if hook.Run("XeLootingSystemDropResultDetermined", self, ply, lootClass) then return end
+	
 	if ( lootClass ~= "nothing" ) then
-		local loot = ents.Create( lootClass )
+		loot = ents.Create( lootClass )
 		if ( loot ~= NULL ) then
 		loot:SetPos( self:GetPos() + ( self:GetAngles():Forward() * self.lootPos.forward ) + ( self:GetAngles():Right() * self.lootPos.right ) + ( self:GetAngles():Up() * self.lootPos.up ) )
 		loot:SetAngles( self:GetAngles() )
 		loot:Spawn()
 		end
 	end
+	
+    	hook.Run("XeLootingSystemDropFinish", self, ply, loot)
+	
 end
 
 function ENT:Use( activator, caller, usetype )
@@ -115,4 +125,3 @@ function ENT:Think()
 	end
 
 end
-
