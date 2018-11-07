@@ -118,7 +118,6 @@ function ENT:Think()
 			self:Loot(self.UsingPlayer) 
 			self:EnableProgressBar(self.UsingPlayer, false) 
 			self:CancelUse() 
-			self.NextSearch = CurTime()
 			return 
 		end
 		
